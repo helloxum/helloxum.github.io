@@ -5,4 +5,42 @@
       var s = document.getElementsByTagName("script")[0];
 
       s.parentNode.insertBefore(hm, s);
-    })();</script><link href=css/vendor.c3b976fb.css rel=stylesheet><link href=css/app.1992a318.css rel=stylesheet></head><body><div id=q-app></div><script src=js/vendor.055ec7f0.js></script><script src=js/app.acc03130.js></script></body></html>
+    })();</script><script>// 等待5+ Runtime初始化完成（仅在HBuilder打包的APK中触发）
+    document.addEventListener('plusready', function() {
+      // 获取当前WebView实例（对应Vue应用所在的WebView）
+      const currentWebview = plus.webview.currentWebview();
+
+      // 监听物理返回键事件
+      plus.key.addEventListener('backbutton', function() {
+        // 检查当前WebView是否有可回退的历史记录（对应Vue路由的跳转记录）
+        currentWebview.canBack(function(result) {
+          if (result.canBack) {
+            // 若有可回退页面，执行WebView回退（触发Vue Router的go(-1)效果）
+            currentWebview.back();
+          } else {
+            // 若无可回退页面，实现“双击退出”逻辑
+            let firstClickTime = null; // 记录第一次点击的时间戳
+
+            // 再次监听返回键（处理双击逻辑）
+            plus.key.addEventListener('backbutton', function() {
+              if (!firstClickTime) {
+                // 第一次点击：记录时间戳，并提示用户
+                firstClickTime = new Date().getTime();
+                console.log('再按一次返回键退出应用');
+                // 1秒后重置时间戳（超过1秒未第二次点击则视为取消）
+                setTimeout(function() {
+                  firstClickTime = null;
+                }, 1000);
+              } else {
+                // 第二次点击：计算两次点击的时间差
+                const timeDiff = new Date().getTime() - firstClickTime;
+                // 若时间差小于1500毫秒（1.5秒），则退出应用
+                if (timeDiff < 1500) {
+                  plus.runtime.quit(); // 终止应用进程
+                }
+              }
+            }, false); // false表示事件捕获阶段触发，避免事件冒泡
+          }
+        });
+      });
+    });</script><link href=css/vendor.c3b976fb.css rel=stylesheet><link href=css/app.ea9cb89d.css rel=stylesheet></head><body><div id=q-app></div><script src=js/vendor.c2608066.js></script><script src=js/app.caa8f21d.js></script></body></html>
